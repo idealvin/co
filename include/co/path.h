@@ -59,4 +59,18 @@ fastring base(const fastring& s);
 // path::ext("a.b/x.log")  ->  ".log"
 fastring ext(const fastring& s);
 
+// return all files in path ,except the filter directory
+bool getAllFiles(const std::string path, std::vector<std::string>& files, const std::vector<std::string> filter_directory = std::vector<std::string>());
+
+// return all formats files in path ,except the filter directory
+bool getAllFormatFiles(const std::string path, std::vector<std::string>& files, std::string format, const std::vector<std::string> filter_directory = std::vector<std::string>());
+
+inline bool getAllFormatFiles(const std::vector<std::string> path, std::vector<std::string>& files, std::string format, const std::vector<std::string> filter_directory = std::vector<std::string>()){
+	if(path.size()<=0) return false;
+	for (size_t i = 0; i<path.size(); i++){
+			getAllFormatFiles(path[i], files, format, filter_directory);
+	}
+	return true;
+}
+
 } // namespace path

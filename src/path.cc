@@ -1,4 +1,15 @@
 #include "co/path.h"
+#include <regex>
+
+#if defined(__cplusplus) && __cplusplus >= 201703L 
+#if defined(__has_include) || __has_include(<filesystem>)
+#include <filesystem>
+namespace fsm = std::filesystem;
+#endif
+#else
+#include <experimental\filesystem>
+namespace fsm = std::experimental::filesystem;
+#endif
 
 namespace path {
 
@@ -69,6 +80,68 @@ fastring ext(const fastring& s) {
         if (s[i] == '.') return s.substr(i);
     }
     return fastring();
+}
+
+bool getAllFiles(const std::string path, std::vector<std::string>& files, const std::vector<std::string> filter_directory){
+	fsm::path file_path = path;
+	if(path.empty() || !fsm::exists(file_path)){
+		files.clear();
+		return false;
+	}
+	if(fsm::is_directory(file_path)){
+		for (auto f : fsm::recursive_directory_iterator(file_path)){
+			bool foundFlag = false;
+			for (size_t i = 0; i < filter_directory.size(); i++){
+				fsm::path filter_directory_index = filter_directory[i];
+				std::string::size_type idx = f.path().string().find(filter_directory_index.string());
+				if (idx != std::string::npos){
+						foundFlag = true;
+						break;
+				}
+			}
+			if(foundFlag == false){
+				if (!fsm::is_directory(f)) files.push_back(f.path().string());
+			}
+		}
+	}
+	else{
+		files.push_back(path)
+	}
+	return true;
+}
+
+bool getAllFormatFiles(const std::string path, std::vector<std::string>& files, std::string expression, const std::vector<std::string> filter_directory){
+		fsm::path file_path = path;
+		if(path.empty() || !fsm::exists(file_path)){
+			files.clear();
+			return false;
+		}
+		std::regex Img(expression, std::regex_constants::syntax_option_type::icase);
+		if (fsm::is_directory(file_path)){
+			for (auto f : fsm::recursive_directory_iterator(file_path)){
+				int foundFlag = false;																						//过滤文件夹
+				for (size_t i = 0; i < filter_directory.size(); i++){
+					fsm::path filter_directory_index = filter_directory[i];
+					std::string::size_type idx = f.path().string().find(filter_directory_index.string());
+					if (idx != string::npos){
+						foundFlag = true;
+						break;
+					}
+				}
+				if (foundFlag == false){
+					auto fname = f.path().filename().string();
+					if (std::regex_match(fname, Img)){
+						files.push_back(f.path().string());
+					}
+				}
+			}
+		}
+		else{
+			if (std::regex_match(fs::path(path).filename().string(), Img)){
+				files.push_back(path);
+			}
+		}
+		return true;
 }
 
 } // namespace path
